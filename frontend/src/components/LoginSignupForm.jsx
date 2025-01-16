@@ -25,7 +25,7 @@ function LoginSignupForm({ isSignup = false }) {
             password: formData.password
         }
 
-        const response = await axios.post('http://localhost:4000/login', postData)
+        const response = await axios.post('http://localhost:4000/user/login', postData)
         return response.data
     }
 
@@ -50,8 +50,8 @@ function LoginSignupForm({ isSignup = false }) {
                 if (res['status'] === false) {
                     alert('Invalid credentials!');
                 } else if (res['status'] === true) {
-                    if (res['role'] === 'Player')  navigate('/player', {state:{username:formData.username}});
-                    else if (res['role'] === 'Designer') navigate('/designer', {state:{username:formData.username}});
+                    if (res['userType'] === 'PLAYER')  navigate('/player', {state:{username:formData.username}});
+                    else if (res['userType'] === 'DESIGNER') navigate('/designer', {state:{username:formData.username}});
                 }
             })
         } else {
@@ -61,8 +61,11 @@ function LoginSignupForm({ isSignup = false }) {
                 if (res['status'] === false) {
                     alert('This username has already been taken.');
                 } else if (res['status'] === true) {
-                    if (formData.role === 'Player')  navigate('/player', {state:{username:formData.username}});
-                    else if (formData.role === 'Designer') navigate('/designer', {state:{username:formData.username}});
+                    let state =  {
+                        state:{username:formData.username,
+                        id:res['id']}}
+                    if (formData.role === 'Player')  navigate('/player', state);
+                    else if (formData.role === 'Designer') navigate('/designer', state);
                 }
             })
         }
