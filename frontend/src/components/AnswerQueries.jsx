@@ -5,18 +5,24 @@ import axios from "axios"
 import '../styles/styles.css';
 
 
-const handleSubmit = (username, query, answer) => {
+const handleSubmit = (user_id, query_id, answer) => {
     if (answer === '') {
         alert('Please choose an answer.');
     } else {
+        const headers = {
+            'userId': user_id
+          };
         const postData = {
-            username:username,
-            query:query,
+            questionId:query_id,
             answer:answer
         }
-        axios.post('http://localhost:4000/submit_answer', postData)
+        axios.post('http://localhost:4000/question/player/answer', postData, {headers: headers})
         .then (res =>  {
-            alert(res.data.response)
+            if (res.data.correct) {
+                alert('Correct Answer!')
+            } else {
+                alert('Incorrect Answer!')
+            }
         }, [])
     }
 
@@ -34,9 +40,12 @@ function AnswerQueries() {
 
     const getAllQueries = () => {
 
-        axios.post('http://localhost:4000/get_all_queries')
+        const headers = {
+            'userId': location.state.id
+          };
+        axios.post('http://localhost:4000/question/player/all',{}, {headers: headers})
         .then (res =>  {
-            setAllQueries(res.data.queries)
+            setAllQueries(res.data.data)
         }, [])
     }
 
@@ -45,10 +54,13 @@ function AnswerQueries() {
     }, []);
 
     const getAllCategories = () => {
-
-        axios.post('http://localhost:4000/get_all_categories')
+        axios.get('http://localhost:4000/category/all')
         .then (res =>  {
-            setAllCategories(res.data.categories)
+            let categories = []
+            for (let i = 0; i < res.data.data.length; i++) {
+                categories.push(res.data.data[i].name)
+            }
+            setAllCategories(categories)
         }, [])
     }
 
@@ -116,13 +128,13 @@ function AnswerQueries() {
 
             <div className="query-card-container">
                 {randomQuery ? (
-                    <QueryCard key={randomQuery.id} query={[randomQuery, location.state.username]} />
+                    <QueryCard key={randomQuery.id} query={[randomQuery, location.state.id]} />
                 ) : (
-                    filteredQueries.map((query) => <QueryCard key={query.id} query={[query, location.state.username]} />)
+                    filteredQueries.map((query) => <QueryCard key={query.id} query={[query, location.state.id]} />)
                 )}
             </div>
 
-            <button className="back-button" onClick={() => navigate('/player', {state:{username:location.state.username}})}>
+            <button className="back-button" onClick={() => navigate('/player', {state: location.state})}>
                 Back to Player Dashboard
             </button>
             <div className="toggle-container">
@@ -140,7 +152,7 @@ function AnswerQueries() {
 }
 
 function QueryCard({ query }) {
-    let username = query[1]
+    let user_id = query[1]
     query = query[0]
     let answer = ''
     return (
@@ -158,9 +170,18 @@ function QueryCard({ query }) {
                     </option>
                 ))}
             </select>
-            <button onClick={() => handleSubmit(username, query, answer)}>Submit Answer</button>
+            <button onClick={() => handleSubmit(user_id, query.id, findIndexOfOption(query.options,answer))}>Submit Answer</button>
         </div>
     );
+}
+
+function findIndexOfOption(options, option) {
+    for (let i = 0; i < options.length; i++) {
+        if (options[i] === option) {
+            return i + 1;
+        }
+    }
+    return -1;
 }
 
 function AnsweredQueryCard({ query }) {

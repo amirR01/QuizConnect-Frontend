@@ -15,11 +15,14 @@ function PlayerDashboard() {
 
     const getQueries = () => {
 
-        axios.post('http://localhost:4000/get_all_queries')
+        const headers = {
+            'userId': location.state.id
+          };
+        axios.post('http://localhost:4000/question/player/all',{}, {headers: headers})
         .then (res =>  {
             let q = []
-            for (let i = 0; i < res.data.queries.length; i++) {
-                q.push(res.data.queries[i].question)
+            for (let i = 0; i < res.data.data.length; i++) {
+                q.push(res.data.data[i].question)
             }
             setRecentQueries(q)
         }, [])
@@ -34,13 +37,9 @@ function PlayerDashboard() {
     }
 
     const getDesigners = () => {
-        const postData = {
-            username:location.state.username,
-        }
-
-        axios.post('http://localhost:4000/get_designers', postData)
+        axios.get('http://localhost:4000/user/designer/all')
         .then (res =>  {
-            const designers = res.data.designers
+            const designers = res.data.data
             let recentDesigners = []
 
             for (let i = 0; i<designers.length; i++) {
@@ -55,14 +54,9 @@ function PlayerDashboard() {
     }, []);
 
     const getScores = () => {
-
-        const postData = {
-            username:location.state.username,
-        }
-
-        axios.post('http://localhost:4000/get_scores', postData)
+        axios.get('http://localhost:4000/user/player/all')
         .then (res =>  {
-            const scores = res.data.score_board
+            const scores = res.data.data
             scores.sort(compareNumbers)
             setScoreBoard(scores)
         }, [])
@@ -85,7 +79,7 @@ function PlayerDashboard() {
                     <li key={index}>{item}</li>
                 ))}
             </ul>
-            <button onClick={() => navigate(navigateTo, {state:{username:location.state.username}})}>{buttonLabel}</button>
+            <button onClick={() => navigate(navigateTo, {state: location.state})}>{buttonLabel}</button>
         </div>
     );
 
@@ -95,12 +89,21 @@ function PlayerDashboard() {
             <div className="card-container">
                 {renderCard(
                     'Scoreboard',
-                    scoreBoard.map((score) => `${score.player} - ${score.score} Points`),
+                    scoreBoard.map((score) => `${score.name} - ${score.score} Points`),
                     'Go to Scoreboard',
                     '/scoreboard'
                 )}
                 {renderCard('Answer Queries', recentQueries, 'Go to Answer Queries', '/answer-queries')}
-                {renderCard('Show Designers', designers, 'Go to Designers Board', '/designerboard')}
+                {
+                    <div className="card">
+                    <h2>{'Show Designers'}</h2>
+                    <ul>
+                        {designers.map((item, index) => (
+                            <li key={index}>{item}</li>
+                        ))}
+                    </ul>
+                    </div>
+                }
             </div>
             <button className="back-button" onClick={() => navigate('/')}>Logout</button>
             <div className="toggle-container">

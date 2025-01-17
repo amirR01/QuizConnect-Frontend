@@ -16,13 +16,22 @@ function Scoreboard() {
     }
 
     const getScores = () => {
-        const postData = {
-            username:location.state.username,
-        }
-
-        axios.post('http://localhost:4000/get_scores', postData)
+        axios.get('http://localhost:4000/user/player/all')
         .then (res =>  {
-            const scores = res.data.score_board
+            const scores = res.data.data
+            let followed_by_me = []
+            for (let i = 0; i < scores.length; i++) {
+                if (scores[i].id == location.state.id) {
+                    followed_by_me = scores[i].followedPlayers
+                }
+            }
+            for (let i = 0; i < scores.length; i++) {
+                if (followed_by_me.includes(scores[i].name)) {
+                    scores[i].following = true
+                } else {
+                    scores[i].following = false
+                }
+            }
             scores.sort(compareNumbers)
             setScoreBoard(scores)
         }, [])
@@ -37,17 +46,16 @@ function Scoreboard() {
         document.body.classList.toggle('night-mode', !isNightMode);
     };
 
-    const toggleFollowStatus = (index) => {
+    const toggleFollowStatus = async(index) => {
+        const headers = {
+            'userId': location.state.id
+          };
         const postData = {
-            username:location.state.username,
-            followed_unfollowed:scoreBoard[index].player
+            username:scoreBoard[index].name,
+            follow: !scoreBoard[index].following,            
         }
-        axios.post('http://localhost:4000/follow_unfollow', postData)
-        setScoreBoard((prevPlayers) =>
-            prevPlayers.map((player, i) =>
-                i === index ? { ...player, following: !player.following } : player
-            )
-        );
+        await axios.post('http://localhost:4000/user/player/follow-unfollow-player', postData, {headers: headers})
+        getScores();
     };
 
     return (
@@ -66,7 +74,7 @@ function Scoreboard() {
                     {scoreBoard.map((player, index) => (
                         <tr key={index}>
                             <td>{index + 1}</td>
-                            <td>{player.player}</td>
+                            <td>{player.name}</td>
                             <td>{player.score}</td>
                             <td>
                                 <button
@@ -88,7 +96,7 @@ function Scoreboard() {
                     ))}
                 </tbody>
             </table>
-            <button className="back-button" onClick={() => navigate('/player', {state:{username:location.state.username}})}>
+            <button className="back-button" onClick={() => navigate('/player',{state: location.state})}>
                 Back to Player Dashboard
             </button>
             <div className="toggle-container">
