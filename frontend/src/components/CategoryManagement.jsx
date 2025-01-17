@@ -15,22 +15,21 @@ function CategoryManagement() {
 
     const addCategory = async() => {
         const postData = {
-            username:location.state.username,
-            category:newCategory
+            name:newCategory
         }
 
-        const response = await axios.post('http://localhost:4000/add_category', postData)
+        const response = await axios.post('http://localhost:4000/category/add', postData)
         return response.data
     }
 
     const axiosGetCategories = () => {
-        const postData = {
-            username:location.state.username,
-        }
-
-        axios.post('http://localhost:4000/get_categories', postData)
+        axios.get('http://localhost:4000/category/all')
         .then (res =>  {
-            setCategories(res.data.categories.categories)
+            let categories = []
+            for (let i = 0; i < res.data.data.length; i++) {
+                categories.push(res.data.data[i].name)
+            }
+            setCategories(categories)
         }, [])
     }
 
@@ -75,7 +74,7 @@ function CategoryManagement() {
                     <button onClick={handleCreateCategory}>Create Category</button>
                 </div>
             </div>
-            <button className="back-button" onClick={() => navigate('/designer', {state:{username:location.state.username}})}>
+            <button className="back-button" onClick={() => navigate('/designer', {state: location.state})}>
                 Back to Designer
             </button>
             <div className="toggle-container">

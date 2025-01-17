@@ -14,26 +14,26 @@ function DesignerDashboard() {
     
 
     const axiosGetCategories = () => {
-        const postData = {
-            username:location.state.username,
-        }
-
-        axios.post('http://localhost:4000/get_categories', postData)
+        axios.get('http://localhost:4000/category/all')
         .then (res =>  {
-            setCategories(res.data.categories.categories)
+            let categories = []
+            for (let i = 0; i < res.data.data.length; i++) {
+                categories.push(res.data.data[i].name)
+            }
+            setCategories(categories)
         }, [])
     }
 
     const axiosGetQueries = () => {
-        const postData = {
-            username:location.state.username,
-        }
-
-        axios.post('http://localhost:4000/get_queries', postData)
+        const postData = {}
+        const headers = {
+            'userId': location.state.id
+          };
+        axios.post('http://localhost:4000/question/designer/all', {}, {headers: headers})
         .then (res =>  {
             let queries = []
-            for (let i = 0; i < res.data.categories.queries.length; i++) {
-                queries.push(res.data.categories.queries[i].question)
+            for (let i = 0; i < res.data.data.length; i++) {
+                queries.push(res.data.data[i].question)
             }
             setQueries(queries)
         }, [])
@@ -63,7 +63,7 @@ function DesignerDashboard() {
                             <li key={index}>{category}</li>
                         ))}
                     </ul>
-                    <button onClick={() => navigate('/category-management', {state:{username:location.state.username}})}>
+                    <button onClick={() => navigate('/category-management', {state: location.state})}>
                         Go to Category Management
                     </button>
                 </div>
@@ -74,7 +74,7 @@ function DesignerDashboard() {
                             <li key={index}>{query}</li>
                         ))}
                     </ul>
-                    <button onClick={() => navigate('/query-management', {state:{username:location.state.username}})}>
+                    <button onClick={() => navigate('/query-management', {state: location.state})}>
                         Go to Query Management
                     </button>
                 </div>

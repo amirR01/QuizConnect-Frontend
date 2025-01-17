@@ -47,20 +47,26 @@ function LoginSignupForm({ isSignup = false }) {
         if (!isSignup) {
             axiosLogin()
             .then(res => {
-                if (res['status'] === false) {
+                if (res['status'] === 400) {
                     alert('Invalid credentials!');
-                } else if (res['status'] === true) {
-                    if (res['userType'] === 'PLAYER')  navigate('/player', {state:{username:formData.username}});
-                    else if (res['userType'] === 'DESIGNER') navigate('/designer', {state:{username:formData.username}});
+                } else if (res['status'] === 200) {
+                    let data = res['data']
+                    let state =  {
+                        state:{username:formData.username,
+                        id:data['id'],
+                        }
+                    }
+                    if (data['userType'] === 'PLAYER')  navigate('/player', state);
+                    else if (data['userType'] === 'DESIGNER') navigate('/designer', state);
                 }
             })
         } else {
             if (!formData.role) alert('Please select a role.');
             axiosSignUp()
             .then(res => {
-                if (res['status'] === false) {
+                if (res['status'] === 400) {
                     alert('This username has already been taken.');
-                } else if (res['status'] === true) {
+                } else if (res['status'] === 200) {
                     let state =  {
                         state:{username:formData.username,
                         id:res['id']}}

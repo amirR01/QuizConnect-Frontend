@@ -12,21 +12,21 @@ function QueryManagement() {
     const [options, setOptions] = useState(['', '', '', '']);
     const [correctAnswer, setCorrectAnswer] = useState(1);
     const [category, setCategory] = useState('Category 1');
-    const [difficulty, setDifficulty] = useState('easy');
+    const [difficulty, setDifficulty] = useState('EASY');
     const [similarQueries, setSimilarQueries] = useState([]);
     const [isNightMode, setIsNightMode] = useState(false);
     const [existingQueries, setExistingQueries] = useState([]);
     const [currentCategories, setCurrentCategories] = useState([]);
+    const [categories_id_map, setCategoriesIdMap] = useState({});
 
     const getExistingQueries = () => {
-        const postData = {
-            username:location.state.username,
-        }
-
-        axios.post('http://localhost:4000/get_queries', postData)
+        const postData = {}
+        const headers = {
+            'userId': location.state.id
+          };
+      axios.post('http://localhost:4000/question/designer/all', {}, {headers: headers})
         .then (res =>  {
-            const queries = res.data.categories.queries
-            setExistingQueries(queries)
+            setExistingQueries(res.data.data)
         }, [])
     }
 
@@ -41,32 +41,34 @@ function QueryManagement() {
     };
 
     const addQuery = async() => {
-        const newQuestion = {
+        const postData = {
             question:newQuery,
             options:options,
-            category:category,
-            level:difficulty,
-            correct_option:correctAnswer
+            categoryId:categories_id_map[category],
+            difficulty:difficulty,
+            correctOption:correctAnswer
         }
 
-        const postData = {
-            username:location.state.username,
-            newQuery:newQuestion
-        }
+        const headers = {
+            'userId': location.state.id
+        };
 
-        const response = await axios.post('http://localhost:4000/add_query', postData)
+        const response = await axios.post('http://localhost:4000/question/designer/add', postData, {headers: headers})
         return response.data
     }
 
     const axiosGetCategories = () => {
-        const postData = {
-            username:location.state.username,
-        }
-
-        axios.post('http://localhost:4000/get_categories', postData)
+        axios.get('http://localhost:4000/category/all')
         .then (res =>  {
-            setCurrentCategories(res.data.categories.categories)
-            setCategory(res.data.categories.categories[0])
+            let categories = []
+            let categories_map = {}
+            for (let i = 0; i < res.data.data.length; i++) {
+                categories_map[res.data.data[i].name] = res.data.data[i].id
+                categories.push(res.data.data[i].name)
+            }
+            setCategoriesIdMap(categories_map)
+            setCurrentCategories(categories)
+            setCategory(categories[0])
         }, [])
     }
 
@@ -91,7 +93,7 @@ function QueryManagement() {
             // Reset form
             setNewQuery('');
             setOptions(['', '', '', '']);
-            setDifficulty('easy');
+            setDifficulty('EASY');
             setSimilarQueries([]);
         }
     };
@@ -157,9 +159,9 @@ function QueryManagement() {
                     value={difficulty}
                     onChange={(e) => setDifficulty(e.target.value)}
                 >
-                    <option value="easy">Easy</option>
-                    <option value="medium">Medium</option>
-                    <option value="hard">Hard</option>
+                    <option value="EASY">Easy</option>
+                    <option value="MEDIUM">Medium</option>
+                    <option value="HARD">Hard</option>
                 </select>
             </div>
             <div className="form-section">
@@ -198,7 +200,7 @@ function QueryManagement() {
                     </div>
                 ))}
             </div>
-            <button className="back-button" onClick={() => navigate('/designer', {state:{username:location.state.username}})}>
+            <button className="back-button" onClick={() => navigate('/designer', {state: location.state})}>
                 Back to Designer
             </button>
             <div className="toggle-container">
